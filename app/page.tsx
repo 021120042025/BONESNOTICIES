@@ -1,10 +1,11 @@
 'use client';
 
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useQuizStore } from '@/store/useQuizStore';
 import { STEPS } from '@/data/types';
 import type { QuizAnswers } from '@/data/types';
+import { saveResponse } from '@/lib/saveResponse';
 
 import LandingScreen     from '@/components/screens/LandingScreen';
 import NarratorScreen    from '@/components/screens/NarratorScreen';
@@ -64,9 +65,22 @@ export default function Home() {
   const store = useQuizStore();
   const { step, narrator, answers, goNext, goPrev, setNarrator, reset } = store;
 
-  const prevStepIdx = useRef(STEPS.indexOf(step));
-  const currIdx     = STEPS.indexOf(step);
-  const direction   = currIdx >= prevStepIdx.current ? 1 : -1;
+  const prevStepIdx  = useRef(STEPS.indexOf(step));
+  const savedRef     = useRef(false);
+  const currIdx      = STEPS.indexOf(step);
+  const direction    = currIdx >= prevStepIdx.current ? 1 : -1;
+
+  // Persist result exactly once when the results screen is entered.
+  // savedRef guards against double-fires on re-render; reset on restart.
+  useEffect(() => {
+    if (step === 'results' && !savedRef.current) {
+      savedRef.current = true;
+      saveResponse(answers, narrator);
+    }
+    if (step === 'landing') {
+      savedRef.current = false; // allow saving again after restart
+    }
+  }, [step, answers, narrator]);
 
   function handleGoNext() {
     prevStepIdx.current = currIdx;
