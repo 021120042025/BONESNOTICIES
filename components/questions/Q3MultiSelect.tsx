@@ -1,6 +1,5 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { Q3_OPTIONS } from '@/data/quizData';
 import type { Q3Answer } from '@/data/types';
 
@@ -20,55 +19,98 @@ export default function Q3MultiSelect({ value, onChange }: Props) {
     }
   }
 
+  const done = value.length === MAX;
+
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <p className="font-sans text-xs font-medium text-ink/50 uppercase tracking-widest">
-          Selecciona fins a {MAX} temes
-        </p>
-        <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full border-2 transition-colors ${
-          value.length === MAX ? 'bg-green border-ink' : 'bg-card border-ink/20'
-        }`}>
-          <span className="font-display font-black text-sm text-ink tabular-nums">{value.length}</span>
-          <span className="font-sans text-ink/40 font-medium text-sm">/{MAX}</span>
-        </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+
+      {/* ms-meta */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'baseline',
+          justifyContent: 'space-between',
+          fontFamily: 'var(--font-sans)',
+          fontWeight: 600,
+          fontSize: '10px',
+          letterSpacing: '0.16em',
+          textTransform: 'uppercase',
+          color: 'rgba(26,20,16,0.5)',
+          padding: '0 4px',
+        }}
+      >
+        <span>
+          Selecciona{' '}
+          <span
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontWeight: 900,
+              fontSize: '14px',
+              color: '#1a1410',
+              letterSpacing: '-0.01em',
+              marginRight: '4px',
+            }}
+          >
+            {MAX}
+          </span>
+        </span>
+        <span>
+          <span
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontWeight: 900,
+              fontSize: '14px',
+              color: done ? '#008f00' : '#1a1410',
+              letterSpacing: '-0.01em',
+              marginRight: '4px',
+            }}
+          >
+            {value.length}
+          </span>
+          / {MAX} seleccionats
+        </span>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {Q3_OPTIONS.map((opt, i) => {
+      {/* ms-stack — vertical pill list */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {Q3_OPTIONS.map(opt => {
           const selected = value.includes(opt);
           const maxed    = !selected && value.length >= MAX;
           return (
-            <motion.button
+            <button
               key={opt}
               onClick={() => toggle(opt)}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.05 }}
-              whileTap={maxed ? {} : { scale: 0.94 }}
-              className={`px-4 py-2.5 rounded-full border-2 font-sans font-semibold text-[13px] transition-colors no-select ${
-                selected
-                  ? 'bg-green border-ink text-ink'
-                  : maxed
-                  ? 'bg-card border-ink/10 text-ink/25 cursor-not-allowed'
-                  : 'bg-card border-ink/20 text-ink hover:border-ink/50'
-              }`}
+              disabled={maxed}
+              className="no-select"
+              style={{
+                background: selected ? '#00ff00' : '#ffffff',
+                color: '#1a1410',
+                border: 0,
+                borderRadius: '999px',
+                padding: '12px 18px',
+                fontFamily: 'var(--font-display)',
+                fontWeight: 800,
+                fontSize: '14px',
+                letterSpacing: 0,
+                lineHeight: 1.1,
+                cursor: maxed ? 'not-allowed' : 'pointer',
+                opacity: maxed ? 0.3 : 1,
+                minHeight: '46px',
+                display: 'flex',
+                alignItems: 'center',
+                width: '100%',
+                textAlign: 'left',
+                boxShadow: selected
+                  ? '0 0 0 2px #1a1410, 0 6px 18px -6px rgba(0,255,0,0.5)'
+                  : '0 2px 0 0 rgba(26,20,16,0.06), 0 4px 14px -6px rgba(26,20,16,0.18)',
+                transition: 'background 220ms, box-shadow 220ms, opacity 220ms',
+              }}
             >
               {opt}
-            </motion.button>
+            </button>
           );
         })}
       </div>
-
-      {value.length === MAX && (
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="font-sans text-xs font-medium text-ink/50 text-center pt-1"
-        >
-          Has seleccionat {MAX} temes. Pots avançar.
-        </motion.p>
-      )}
     </div>
   );
 }

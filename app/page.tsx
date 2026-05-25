@@ -25,11 +25,11 @@ function useIsComplete(step: string, answers: QuizAnswers) {
     switch (step) {
       case 'q1': return Object.keys(answers.q1 ?? {}).length === 4;
       case 'q2': return [0, 1, 2].every(i => (answers.q2 ?? {})[i] !== undefined);
-      case 'q3': return (answers.q3 ?? []).length >= 1;
+      case 'q3': return (answers.q3 ?? []).length === 3;
       case 'q4': return [0, 1, 2].every(i => (answers.q4 ?? {})[i] !== undefined);
-      case 'q5': return Object.keys(answers.q5 ?? {}).length === 3;
+      case 'q5': return Object.keys(answers.q5 ?? {}).length === 3; // set on first drag
       case 'q6': return Object.keys(answers.q6 ?? {}).length === 4;
-      case 'q7': return (answers.q7 ?? []).length >= 1;
+      case 'q7': return (answers.q7 ?? []).length === 3;
       case 'q8': return [0, 1, 2].every(i => (answers.q8 ?? {})[i] !== undefined);
       default:   return true;
     }
@@ -43,7 +43,7 @@ function useCounts(step: string, answers: QuizAnswers): [number | undefined, num
       case 'q2': return [[0,1,2].filter(i => (answers.q2 ?? {})[i] !== undefined).length, 3];
       case 'q3': return [(answers.q3 ?? []).length, 3];
       case 'q4': return [[0,1,2].filter(i => (answers.q4 ?? {})[i] !== undefined).length, 3];
-      case 'q5': return [Object.keys(answers.q5 ?? {}).length, 3];
+      case 'q5': return [Object.keys(answers.q5 ?? {}).length > 0 ? 1 : 0, 1];
       case 'q6': return [Object.keys(answers.q6 ?? {}).length, 4];
       case 'q7': return [(answers.q7 ?? []).length, 3];
       case 'q8': return [[0,1,2].filter(i => (answers.q8 ?? {})[i] !== undefined).length, 3];

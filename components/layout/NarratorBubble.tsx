@@ -11,40 +11,65 @@ export default function NarratorBubble({ narratorId, text }: Props) {
   const narrator = NARRATORS.find(n => n.id === narratorId) ?? NARRATORS[0];
 
   return (
-    <div className="flex items-end gap-[14px] px-5 pt-3 pb-5 bg-bg">
-      {/* Avatar — 64×64, 10px radius, green border, initials */}
+    <div
+      className="flex items-start gap-3 px-[22px] pb-5 bg-bg"
+      style={{ marginTop: '4px' }}
+    >
+      {/* Avatar — 72×72, 14px radius, no green border, bg-soft */}
       <div
-        className="shrink-0 w-16 h-16 border-2 border-green flex items-center justify-center overflow-hidden"
-        style={{ borderRadius: '10px', background: 'rgba(255,255,255,0.04)' }}
+        className="shrink-0 flex items-end justify-center overflow-hidden"
+        style={{
+          width: '72px',
+          height: '72px',
+          borderRadius: '14px',
+          background: '#2b231d',
+          position: 'relative',
+        }}
       >
-        <span className="font-display font-black text-[18px] text-bone tracking-tight">
+        <span
+          className="font-display font-black text-bone"
+          style={{ fontSize: '20px', letterSpacing: '-0.02em', paddingBottom: '8px' }}
+        >
           {narrator.initials}
         </span>
       </div>
 
-      {/* Speech bubble — tail at bottom-left (border-radius: 12px 12px 12px 4px) */}
+      {/* Speech bubble — 20px radius, bg-soft, faint border */}
       <div
-        className="flex-1 px-[14px] py-[11px]"
+        className="flex-1 min-w-0"
         style={{
-          background: 'rgba(255,255,255,0.07)',
-          border: '1px solid rgba(255,255,255,0.12)',
-          borderRadius: '12px 12px 12px 4px',
+          background: '#2b231d',
+          borderRadius: '20px',
+          padding: '12px 16px 14px',
+          border: '1px solid rgba(236,233,233,0.06)',
         }}
       >
         {/* Narrator name */}
-        <p
-          className="font-sans font-bold uppercase text-green mb-1"
-          style={{ fontSize: '0.55rem', letterSpacing: '0.1em' }}
+        <div
+          className="text-green"
+          style={{
+            fontFamily: 'var(--font-sans)',
+            fontWeight: 700,
+            fontSize: '11px',
+            letterSpacing: '0.16em',
+            textTransform: 'uppercase',
+            lineHeight: 1,
+            marginBottom: '8px',
+          }}
         >
-          {narrator.name}
-        </p>
+          {narrator.name.toUpperCase()}
+        </div>
         {/* Question text */}
-        <p
-          className="font-serif text-bone"
-          style={{ fontSize: 'clamp(0.92rem, 3.8vw, 1.08rem)', lineHeight: 1.5 }}
+        <div
+          className="text-bone"
+          style={{
+            fontFamily: 'var(--font-serif)',
+            fontSize: '14.5px',
+            lineHeight: 1.32,
+          }}
         >
           {text}
-        </p>
+        </div>
       </div>
     </div>
   );

@@ -12,14 +12,6 @@ interface Props {
   nextLabel?: string;
 }
 
-const pulseAnim = {
-  boxShadow: [
-    '0 0 0 0 rgba(0,255,0,0)',
-    '0 0 0 10px rgba(0,255,0,0.18)',
-    '0 0 0 0 rgba(0,255,0,0)',
-  ],
-};
-
 export default function NavigationFooter({
   onPrev,
   canGoBack = true,
@@ -31,11 +23,17 @@ export default function NavigationFooter({
 }: Props) {
   return (
     <footer
-      className="shrink-0 bg-light flex items-center gap-[8px] px-4"
+      className="shrink-0 bg-light"
       style={{
-        borderTop: '1.5px solid #d4cecd',
-        paddingTop: '0.75rem',
-        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.85rem)',
+        paddingTop: '14px',
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 18px)',
+        paddingLeft: '18px',
+        paddingRight: '18px',
+        display: 'grid',
+        gridTemplateColumns: '1fr auto 1fr',
+        alignItems: 'center',
+        gap: '12px',
+        flexShrink: 0,
       }}
     >
       {/* Prev */}
@@ -43,31 +41,58 @@ export default function NavigationFooter({
         onClick={canGoBack ? onPrev : undefined}
         whileTap={canGoBack ? { scale: 0.92 } : {}}
         disabled={!canGoBack}
-        className="w-[46px] h-[46px] shrink-0 rounded-full flex items-center justify-center no-select transition-opacity"
-        style={{ border: '1.5px solid #1a1410', opacity: canGoBack ? 1 : 0.2 }}
-        aria-label="Anterior"
+        aria-label="Enrere"
+        style={{
+          justifySelf: 'start',
+          width: '50px',
+          height: '50px',
+          borderRadius: '50%',
+          background: 'transparent',
+          color: '#1a1410',
+          border: '1.5px solid #1a1410',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: canGoBack ? 'pointer' : 'default',
+          opacity: canGoBack ? 1 : 0.35,
+          transition: 'opacity 260ms',
+        }}
       >
-        <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+          strokeLinecap="round" strokeLinejoin="round" style={{ width: '20px', height: '20px' }}>
           <path d="M19 12H5M12 19l-7-7 7-7" />
         </svg>
       </motion.button>
 
       {/* Centre counter */}
-      <div className="flex-1 text-center leading-[1.35]">
+      <div style={{ textAlign: 'center', userSelect: 'none' }}>
         {typeof answered === 'number' && typeof total === 'number' && (
           <>
-            <span
-              className="font-display font-black text-ink tabular-nums block"
-              style={{ fontSize: '1rem' }}
+            <div
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontWeight: 900,
+                fontSize: '18px',
+                letterSpacing: '-0.005em',
+                lineHeight: 1,
+                color: '#1a1410',
+              }}
             >
               {answered} / {total}
-            </span>
-            <span
-              className="font-sans uppercase text-bone-mute block"
-              style={{ fontSize: '0.58rem', letterSpacing: '0.1em' }}
+            </div>
+            <div
+              style={{
+                fontFamily: 'var(--font-sans)',
+                fontWeight: 500,
+                fontSize: '10px',
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                color: 'rgba(26,20,16,0.5)',
+                marginTop: '6px',
+              }}
             >
               {nextLabel ?? 'Respostes'}
-            </span>
+            </div>
           </>
         )}
       </div>
@@ -76,20 +101,29 @@ export default function NavigationFooter({
       <motion.button
         onClick={onNext}
         whileTap={{ scale: 0.92 }}
-        className="w-[46px] h-[46px] shrink-0 rounded-full flex items-center justify-center no-select transition-colors duration-150"
-        style={{ background: canGoNext ? '#00ff00' : '#1a1410' }}
-        animate={canGoNext ? pulseAnim : { boxShadow: '0 0 0 0 rgba(0,255,0,0)' }}
-        transition={canGoNext ? { duration: 2.4, repeat: Infinity, ease: 'easeInOut' } : {}}
         aria-label="Següent"
+        animate={canGoNext
+          ? { boxShadow: ['0 0 0 0 rgba(0,255,0,0), 0 4px 10px -4px rgba(0,255,0,0.45)', '0 0 0 10px rgba(0,255,0,0.18), 0 4px 14px -4px rgba(0,255,0,0.5)', '0 0 0 0 rgba(0,255,0,0), 0 4px 10px -4px rgba(0,255,0,0.45)'] }
+          : { boxShadow: '0 4px 10px -4px rgba(26,20,16,0.4)' }
+        }
+        transition={canGoNext ? { duration: 2.4, repeat: Infinity, ease: 'easeInOut' } : {}}
+        style={{
+          justifySelf: 'end',
+          width: '50px',
+          height: '50px',
+          borderRadius: '50%',
+          background: canGoNext ? '#00ff00' : '#1a1410',
+          color: canGoNext ? '#1a1410' : '#ece9e9',
+          border: 0,
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          transition: 'background 260ms, color 260ms',
+        }}
       >
-        <svg
-          width="18"
-          height="18"
-          fill="none"
-          stroke={canGoNext ? '#1a1410' : '#ece9e9'}
-          strokeWidth="2.5"
-          viewBox="0 0 24 24"
-        >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+          strokeLinecap="round" strokeLinejoin="round" style={{ width: '20px', height: '20px' }}>
           <path d="M5 12h14M12 5l7 7-7 7" />
         </svg>
       </motion.button>

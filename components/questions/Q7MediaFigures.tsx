@@ -1,6 +1,5 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { Q7_FIGURES } from '@/data/quizData';
 import type { Q7Answer } from '@/data/types';
 
@@ -20,68 +19,135 @@ export default function Q7MediaFigures({ value, onChange }: Props) {
     }
   }
 
+  const done = value.length === MAX;
+
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <p className="font-sans text-xs font-medium text-ink/50 uppercase tracking-widest">
-          Selecciona fins a {MAX} personatges
-        </p>
-        <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full border-2 transition-colors ${
-          value.length === MAX ? 'bg-green border-ink' : 'bg-card border-ink/20'
-        }`}>
-          <span className="font-display font-black text-sm text-ink tabular-nums">{value.length}</span>
-          <span className="font-sans text-ink/40 font-medium text-sm">/{MAX}</span>
-        </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+
+      {/* ms-meta */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'baseline',
+          justifyContent: 'space-between',
+          fontFamily: 'var(--font-sans)',
+          fontWeight: 600,
+          fontSize: '10px',
+          letterSpacing: '0.16em',
+          textTransform: 'uppercase',
+          color: 'rgba(26,20,16,0.5)',
+          padding: '0 4px',
+        }}
+      >
+        <span>
+          Selecciona{' '}
+          <span
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontWeight: 900,
+              fontSize: '14px',
+              color: '#1a1410',
+              letterSpacing: '-0.01em',
+              marginRight: '4px',
+            }}
+          >
+            {MAX}
+          </span>
+        </span>
+        <span>
+          <span
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontWeight: 900,
+              fontSize: '14px',
+              color: done ? '#008f00' : '#1a1410',
+              letterSpacing: '-0.01em',
+              marginRight: '4px',
+            }}
+          >
+            {value.length}
+          </span>
+          / {MAX} seleccionats
+        </span>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        {Q7_FIGURES.map((fig, i) => {
+      {/* media-grid — 2×3 card grid */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gridTemplateRows: 'repeat(3, 1fr)',
+          gap: '10px',
+          flex: '1 1 auto',
+          minHeight: 0,
+        }}
+      >
+        {Q7_FIGURES.map(fig => {
           const selected = value.includes(fig.id);
           const maxed    = !selected && value.length >= MAX;
           return (
-            <motion.button
+            <button
               key={fig.id}
               onClick={() => toggle(fig.id)}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.06 }}
-              whileTap={maxed ? {} : { scale: 0.95 }}
-              className={`relative flex flex-col items-center text-center p-4 rounded-2xl border-2 transition-colors no-select ${
-                selected
-                  ? 'bg-green border-ink'
-                  : maxed
-                  ? 'bg-card border-ink/10 opacity-40'
-                  : 'bg-card border-ink/20 hover:border-ink/50'
-              }`}
+              disabled={maxed}
+              className="no-select"
+              style={{
+                background: selected ? '#00ff00' : '#ffffff',
+                border: 0,
+                borderRadius: '16px',
+                padding: '8px',
+                display: 'flex',
+                flexDirection: 'column',
+                cursor: maxed ? 'not-allowed' : 'pointer',
+                opacity: maxed ? 0.3 : 1,
+                boxShadow: selected
+                  ? '0 0 0 2px #1a1410, 0 6px 18px -6px rgba(0,255,0,0.5)'
+                  : '0 2px 0 0 rgba(26,20,16,0.06), 0 4px 14px -6px rgba(26,20,16,0.15)',
+                transition: 'all 220ms cubic-bezier(.2,.7,.2,1)',
+              }}
             >
+              {/* Portrait area */}
               <div
-                className={`w-14 h-14 border-2 flex items-center justify-center mb-2 ${
-                  selected ? 'bg-ink border-ink' : 'bg-light border-ink/15'
-                }`}
-                style={{ borderRadius: '12px' }}
+                style={{
+                  flex: 1,
+                  background: '#e0dbd5',
+                  borderRadius: '10px',
+                  overflow: 'hidden',
+                  display: 'flex',
+                  alignItems: 'flex-end',
+                  justifyContent: 'center',
+                  minHeight: '72px',
+                }}
               >
-                <span className={`font-display font-black text-lg leading-none ${
-                  selected ? 'text-green' : 'text-ink'
-                }`}>
+                <span
+                  style={{
+                    fontFamily: 'var(--font-display)',
+                    fontWeight: 900,
+                    fontSize: '22px',
+                    color: selected ? '#1a1410' : '#6a6360',
+                    paddingBottom: '8px',
+                  }}
+                >
                   {fig.initials}
                 </span>
               </div>
-              <span className="font-sans font-bold text-[13px] leading-tight text-ink">
+              {/* Name */}
+              <div
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontWeight: 800,
+                  fontSize: '10.5px',
+                  letterSpacing: '0.04em',
+                  textAlign: 'center',
+                  marginTop: '6px',
+                  color: '#1a1410',
+                  textTransform: 'uppercase',
+                  lineHeight: 1.15,
+                }}
+              >
                 {fig.name}
-              </span>
-              <span className="font-sans text-[10px] font-medium mt-0.5 text-ink/50">
-                {fig.party}
-              </span>
-              {selected && (
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-ink flex items-center justify-center"
-                >
-                  <span className="text-[9px] font-black text-green">✓</span>
-                </motion.div>
-              )}
-            </motion.button>
+              </div>
+            </button>
           );
         })}
       </div>

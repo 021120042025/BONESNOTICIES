@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Q4_MINI } from '@/data/quizData';
 import type { Q4Answer } from '@/data/types';
 
@@ -11,113 +10,159 @@ interface Props {
 }
 
 export default function Q4TabQuiz({ value, onChange }: Props) {
-  const [active, setActive] = useState(() => {
+  const [current, setCurrent] = useState(() => {
     const first = Q4_MINI.findIndex((_, i) => value[i] === undefined);
-    return first === -1 ? 2 : first;
+    return first === -1 ? Q4_MINI.length - 1 : first;
   });
 
   function handleSelect(option: string) {
-    const next = { ...value, [active]: option };
+    const next = { ...value, [current]: option };
     onChange(next);
-    const nextUnanswered = Q4_MINI.findIndex((_, i) => i > active && next[i] === undefined);
-    if (nextUnanswered !== -1) {
-      setTimeout(() => setActive(nextUnanswered), 350);
-    }
+    setTimeout(() => {
+      if (current < Q4_MINI.length - 1) setCurrent(current + 1);
+    }, 380);
   }
 
-  const mini = Q4_MINI[active];
+  const total = Q4_MINI.length;
 
   return (
-    <div className="space-y-3">
-      <div className="flex gap-2">
-        {Q4_MINI.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setActive(i)}
-            className={`flex-1 h-1.5 rounded-full transition-colors no-select ${
-              i === active ? 'bg-ink' : value[i] !== undefined ? 'bg-green border border-ink' : 'bg-ink/20'
-            }`}
-          />
-        ))}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+
+      {/* Sub-question counter + dots */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+          fontFamily: 'var(--font-sans)',
+          fontWeight: 600,
+          fontSize: '10px',
+          letterSpacing: '0.18em',
+          textTransform: 'uppercase',
+          color: 'rgba(26,20,16,0.5)',
+        }}
+      >
+        <span><span>{current + 1}</span> / {total} subpreguntes</span>
+        <span style={{ display: 'flex', gap: '5px' }}>
+          {Q4_MINI.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrent(i)}
+              className="no-select"
+              style={{
+                width: '7px', height: '7px',
+                borderRadius: '50%',
+                background: i < current
+                  ? 'rgba(26,20,16,0.55)'
+                  : i === current
+                  ? '#00ff00'
+                  : 'rgba(26,20,16,0.18)',
+                transform: i === current ? 'scale(1.2)' : 'scale(1)',
+                transition: 'background 220ms, transform 220ms',
+                border: 0,
+                cursor: 'pointer',
+                padding: 0,
+              }}
+            />
+          ))}
+        </span>
       </div>
 
-      <div className="relative">
-        {[2, 1].map(offset => (
-          <div
-            key={offset}
-            className="absolute inset-x-0 bg-card border-2 border-ink/20 rounded-2xl"
-            style={{
-              top: `${offset * 6}px`,
-              zIndex: 10 - offset,
-              opacity: 0.45,
-              transform: `scale(${1 - offset * 0.025})`,
-              height: '200px',
-            }}
-          />
-        ))}
+      {/* Stacked deck */}
+      <div
+        style={{
+          position: 'relative',
+          flex: '1 1 auto',
+          minHeight: 0,
+          margin: '0 -4px',
+          padding: '0 4px 8px',
+          height: '340px',
+        }}
+      >
+        {Q4_MINI.map((mini, i) => {
+          const depth = i - current;
+          const clamped = depth < 0 ? -1 : depth > 2 ? 3 : depth;
+          const transforms: Record<number, { translateY: string; scale: number; opacity: number; zIndex: number; pointerEvents: 'none' | 'auto' }> = {
+            0:  { translateY: '0px',   scale: 1,    opacity: 1,    zIndex: 3, pointerEvents: 'auto' },
+            1:  { translateY: '10px',  scale: 0.96, opacity: 0.6,  zIndex: 2, pointerEvents: 'none' },
+            2:  { translateY: '20px',  scale: 0.92, opacity: 0.32, zIndex: 1, pointerEvents: 'none' },
+            [-1]: { translateY: '-30px', scale: 0.94, opacity: 0,    zIndex: 0, pointerEvents: 'none' },
+            3:  { translateY: '-30px', scale: 0.94, opacity: 0,    zIndex: 0, pointerEvents: 'none' },
+          };
+          const t = transforms[clamped] ?? transforms[3];
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={active}
-            initial={{ opacity: 0, y: -8, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.97 }}
-            transition={{ duration: 0.25 }}
-            className="relative z-20 bg-card border-2 border-ink/20 rounded-2xl overflow-hidden shadow-[0_2px_12px_-4px_rgba(26,20,16,0.12)]"
-          >
-            <div className="bg-ink px-4 py-3">
-              <span className="font-sans text-[11px] font-bold uppercase tracking-widest text-bone/70">
-                Sistema electoral · {active + 1} de {Q4_MINI.length}
-              </span>
-            </div>
-
-            <div className="p-4">
-              <p className="font-serif text-[15px] text-ink leading-snug mb-4">
+          return (
+            <div
+              key={i}
+              style={{
+                position: 'absolute',
+                left: '4px', right: '4px',
+                top: 0, bottom: 0,
+                background: '#ffffff',
+                borderRadius: '22px',
+                padding: '18px',
+                boxShadow: '0 2px 0 0 rgba(26,20,16,0.06), 0 12px 30px -10px rgba(26,20,16,0.22), 0 1px 2px rgba(26,20,16,0.06)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '14px',
+                transform: `translateY(${t.translateY}) scale(${t.scale})`,
+                opacity: t.opacity,
+                zIndex: t.zIndex,
+                pointerEvents: t.pointerEvents,
+                transition: 'transform 360ms cubic-bezier(.2,.7,.2,1), opacity 360ms cubic-bezier(.2,.7,.2,1)',
+              }}
+            >
+              {/* Question */}
+              <div
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontWeight: 900,
+                  fontSize: '17.5px',
+                  lineHeight: 1.12,
+                  letterSpacing: '-0.015em',
+                  color: '#1a1410',
+                  flex: '1 1 auto',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
                 {mini.question}
-              </p>
+              </div>
 
-              <div className="space-y-2">
+              {/* Options */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
                 {mini.options.map(opt => {
-                  const selected = value[active] === opt;
+                  const sel = value[i] === opt;
                   return (
-                    <motion.button
+                    <button
                       key={opt}
-                      onClick={() => handleSelect(opt)}
-                      whileTap={{ scale: 0.97 }}
-                      className={`w-full text-left px-4 py-3 rounded-xl border-2 font-sans font-semibold text-[14px] transition-colors no-select ${
-                        selected
-                          ? 'bg-green border-ink text-ink'
-                          : 'bg-light border-ink/20 text-ink hover:border-ink/50'
-                      }`}
+                      onClick={() => i === current && handleSelect(opt)}
+                      className="no-select"
+                      style={{
+                        background: sel ? '#00ff00' : 'transparent',
+                        color: '#1a1410',
+                        border: sel ? '1.5px solid #1a1410' : '1.5px solid rgba(26,20,16,0.18)',
+                        borderRadius: '999px',
+                        padding: '11px 18px',
+                        fontFamily: 'var(--font-display)',
+                        fontWeight: 800,
+                        fontSize: '13px',
+                        letterSpacing: '-0.005em',
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        transition: 'all 220ms cubic-bezier(.2,.7,.2,1)',
+                        boxShadow: sel ? '0 0 0 2px #1a1410 inset, 0 4px 14px -4px rgba(0,255,0,0.4)' : undefined,
+                      }}
                     >
                       {opt}
-                    </motion.button>
+                    </button>
                   );
                 })}
               </div>
             </div>
-          </motion.div>
-        </AnimatePresence>
-      </div>
-
-      <div className="flex justify-between items-center pt-1">
-        <button
-          onClick={() => setActive(Math.max(0, active - 1))}
-          disabled={active === 0}
-          className="font-sans text-xs font-medium text-ink/50 disabled:opacity-30 no-select"
-        >
-          ← Anterior
-        </button>
-        <span className="font-sans text-xs font-medium text-ink/40 tabular-nums">
-          {active + 1} / {Q4_MINI.length}
-        </span>
-        <button
-          onClick={() => setActive(Math.min(Q4_MINI.length - 1, active + 1))}
-          disabled={active === Q4_MINI.length - 1}
-          className="font-sans text-xs font-medium text-ink/50 disabled:opacity-30 no-select"
-        >
-          Següent →
-        </button>
+          );
+        })}
       </div>
     </div>
   );

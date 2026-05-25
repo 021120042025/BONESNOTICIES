@@ -1,7 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useRef, useCallback } from 'react';
 import { Q5_TERMS, Q5_DEFINITIONS } from '@/data/quizData';
 import type { Q5Answer } from '@/data/types';
 
@@ -19,217 +18,276 @@ interface Props {
   onChange: (v: Q5Answer) => void;
 }
 
+const ROW_H = 110; // px, height of each def card
+const GAP   = 10;  // px, gap between cards
+
 export default function Q5DefinitionMatch({ value, onChange }: Props) {
-  const [shuffledDefs] = useState(() => shuffle(Q5_DEFINITIONS));
+  // Initialise order from Q5Answer (if already set) or shuffle
+  const [order, setOrder] = useState<string[]>(() => {
+    const defIds = Q5_DEFINITIONS.map(d => d.id);
+    if (Object.keys(value).length === Q5_TERMS.length) {
+      // Reconstruct order from existing answer
+      return Q5_TERMS.map(t => value[t]).filter(Boolean) as string[];
+    }
+    return shuffle(defIds);
+  });
 
-  /* Independent left / right selection */
-  const [leftSel,  setLeftSel]  = useState<string | null>(null);
-  const [rightSel, setRightSel] = useState<string | null>(null);
+  const getDefText = (id: string) => Q5_DEFINITIONS.find(d => d.id === id)?.text ?? '';
 
-  const matchedTerms  = Object.keys(value);
-  const matchedDefIds = Object.values(value);
-  const pairs         = matchedTerms.map(term => ({ term, defId: value[term] }));
+  // Emit Q5Answer based on current order
+  const emitAnswer = useCallback((newOrder: string[]) => {
+    const answer: Q5Answer = {};
+    Q5_TERMS.forEach((term, i) => {
+      if (newOrder[i]) answer[term] = newOrder[i];
+    });
+    onChange(answer);
+  }, [onChange]);
 
-  function isPairedTerm(t: string)  { return matchedTerms.includes(t); }
-  function isPairedDef(id: string)  { return matchedDefIds.includes(id); }
+  // Drag state (ref-based to avoid re-render during drag)
+  const dragState = useRef<{
+    id: string;
+    startY: number;
+    startRow: number;
+    currentRow: number;
+  } | null>(null);
 
-  function tryCreatePair(term: string | null, defId: string | null) {
-    if (!term || !defId) return;
-    onChange({ ...value, [term]: defId });
-    setLeftSel(null);
-    setRightSel(null);
+  // Track rendered Y-positions of each def element
+  const elemRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  // For controlled re-render after row swap
+  const [, forceUpdate] = useState(0);
+
+  function rowHeight() { return ROW_H + GAP; }
+
+  function handlePointerDown(e: React.PointerEvent, id: string) {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    const row = order.indexOf(id);
+    dragState.current = { id, startY: e.clientY, startRow: row, currentRow: row };
+    const el = elemRefs.current[id];
+    if (el) {
+      el.style.transition = 'box-shadow 180ms ease-out';
+      el.style.zIndex = '10';
+      el.style.cursor = 'grabbing';
+      el.style.boxShadow = '0 12px 32px -8px rgba(26,20,16,0.4), 0 0 0 2px #00ff00';
+    }
+    forceUpdate(n => n + 1);
   }
 
-  function handleTerm(term: string) {
-    if (isPairedTerm(term)) return;
-    if (leftSel === term) { setLeftSel(null); return; }
-    setLeftSel(term);
-    tryCreatePair(term, rightSel);
+  function handlePointerMove(e: React.PointerEvent, id: string) {
+    const ds = dragState.current;
+    if (!ds || ds.id !== id) return;
+
+    const deltaY = e.clientY - ds.startY;
+    const el = elemRefs.current[id];
+    const RH = rowHeight();
+
+    // Position of dragged element = its natural position offset by accumulated swaps + live delta
+    const naturalPos = ds.startRow; // where it started
+    const currentPos = ds.currentRow;
+    const translateY = (currentPos - naturalPos) * RH + deltaY;
+
+    if (el) {
+      el.style.transform = `translateY(${translateY}px)`;
+    }
+
+    // Check if we crossed into a new row
+    const visualRow = currentPos + deltaY / RH;
+    const newRow = Math.max(0, Math.min(order.length - 1, Math.round(visualRow)));
+
+    if (newRow !== currentPos) {
+      // Swap in order array
+      const newOrder = [...order];
+      newOrder.splice(currentPos, 1);
+      newOrder.splice(newRow, 0, id);
+      setOrder(newOrder);
+
+      // Emit answer immediately on any swap
+      emitAnswer(newOrder);
+
+      // Update drag state
+      const deltaRowShift = newRow - currentPos;
+      dragState.current = {
+        ...ds,
+        startY: ds.startY + deltaRowShift * RH,
+        currentRow: newRow,
+      };
+
+      // Settle other elements
+      newOrder.forEach((otherId, i) => {
+        if (otherId === id) return;
+        const otherEl = elemRefs.current[otherId];
+        if (otherEl) {
+          // natural position of otherId in newOrder is i
+          // but its DOM position (natural) was its original order index = newOrder pre-swap
+          // We use data-natural for the initial index (set at first render)
+          const natural = parseInt(otherEl.dataset.natural ?? '0', 10);
+          otherEl.style.transition = 'transform 220ms cubic-bezier(.2,.7,.2,1)';
+          otherEl.style.transform = `translateY(${(i - natural) * RH}px)`;
+        }
+      });
+
+      // Update dragged element's transform based on new reference
+      const newDelta = e.clientY - dragState.current.startY;
+      const newTranslateY = (newRow - ds.startRow) * RH + newDelta;
+      if (el) {
+        el.style.transform = `translateY(${newTranslateY}px)`;
+      }
+    }
   }
 
-  function handleDef(defId: string) {
-    if (isPairedDef(defId)) return;
-    if (rightSel === defId) { setRightSel(null); return; }
-    setRightSel(defId);
-    tryCreatePair(leftSel, defId);
-  }
+  function handlePointerUp(e: React.PointerEvent, id: string) {
+    const ds = dragState.current;
+    if (!ds || ds.id !== id) return;
 
-  function removeMatch(term: string) {
-    const next = { ...value };
-    delete next[term];
-    onChange(next);
-  }
+    try { e.currentTarget.releasePointerCapture(e.pointerId); } catch (_) {}
 
-  const getDefText = (id: string) =>
-    Q5_DEFINITIONS.find(d => d.id === id)?.text ?? '';
+    const el = elemRefs.current[id];
+    const currentPos = ds.currentRow;
+    const naturalPos = ds.startRow;
+    const RH = rowHeight();
+
+    if (el) {
+      el.style.transition = 'transform 280ms cubic-bezier(.2,.7,.2,1), box-shadow 220ms';
+      el.style.transform = `translateY(${(currentPos - naturalPos) * RH}px)`;
+      el.style.boxShadow = '0 2px 0 0 rgba(26,20,16,0.06), 0 4px 14px -6px rgba(26,20,16,0.15), 0 1px 2px rgba(26,20,16,0.06)';
+      el.style.zIndex = '';
+      el.style.cursor = 'grab';
+    }
+
+    dragState.current = null;
+    forceUpdate(n => n + 1);
+  }
 
   return (
-    <div className="flex flex-col gap-3">
-
-      {/* Status hint */}
-      <div className="relative h-[18px] overflow-hidden">
-        <AnimatePresence mode="wait">
-          {leftSel || rightSel ? (
-            <motion.div
-              key="sel"
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 6 }}
-              transition={{ duration: 0.18 }}
-              className="absolute inset-0 flex items-center gap-2"
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+      {/* Match board */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '96px 1fr',
+          gap: '10px',
+          touchAction: 'none',
+        }}
+      >
+        {/* Left: Terms (fixed) */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: `${GAP}px` }}>
+          {Q5_TERMS.map(term => (
+            <div
+              key={term}
+              style={{
+                height: `${ROW_H}px`,
+                background: '#1a1410',
+                color: '#ece9e9',
+                borderRadius: '18px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                textAlign: 'center',
+                fontFamily: 'var(--font-display)',
+                fontWeight: 900,
+                fontSize: '12px',
+                letterSpacing: '0.04em',
+                textTransform: 'uppercase',
+                lineHeight: 1.1,
+                padding: '12px 8px',
+                boxShadow: '0 2px 0 0 rgba(0,0,0,0.1), 0 4px 14px -6px rgba(0,0,0,0.25)',
+                flexShrink: 0,
+              }}
             >
-              <div className="w-[7px] h-[7px] rounded-full bg-green shrink-0" />
-              {leftSel && (
-                <span className="font-display font-[800] text-[12px] text-ink leading-none">
-                  &ldquo;{leftSel}&rdquo;
-                </span>
-              )}
-              <span className="font-sans text-[11px] text-ink/45 leading-none">
-                — ara tria l&rsquo;altre costat
-              </span>
-            </motion.div>
-          ) : (
-            <motion.p
-              key="idle"
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 6 }}
-              transition={{ duration: 0.18 }}
-              className="absolute inset-0 flex items-center font-sans text-[10.5px] font-medium uppercase tracking-[0.12em] text-ink/35"
-            >
-              Tria un terme, desprès la seva definició
-            </motion.p>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Dark match card */}
-      <div className="bg-ink rounded-2xl px-4 pt-4 pb-5 flex flex-col gap-4">
-
-        {/* 2-col grid */}
-        <div className="grid grid-cols-2 gap-[5px] items-start">
-
-          {/* Left — terms */}
-          <div className="flex flex-col gap-[5px]">
-            {Q5_TERMS.map(term => {
-              const paired   = isPairedTerm(term);
-              const selected = leftSel === term;
-              return (
-                <motion.button
-                  key={term}
-                  onClick={() => handleTerm(term)}
-                  whileTap={paired ? {} : { scale: 0.95 }}
-                  animate={{ opacity: paired ? 0.28 : 1 }}
-                  transition={{ duration: 0.2 }}
-                  className={`min-h-[66px] rounded-[14px] border-[2.5px] flex items-center justify-center
-                    text-center px-2.5 py-3 no-select transition-colors duration-150 ${
-                    paired
-                      ? 'bg-white/10 border-transparent pointer-events-none'
-                      : selected
-                      ? 'bg-green/[.13] border-green cursor-pointer'
-                      : 'bg-white/10 border-transparent hover:border-white/20 cursor-pointer'
-                  }`}
-                >
-                  <span className="font-display font-[800] text-[15px] leading-snug text-bone">
-                    {term}
-                  </span>
-                </motion.button>
-              );
-            })}
-          </div>
-
-          {/* Right — definitions, offset for editorial asymmetry */}
-          <div className="flex flex-col gap-[5px] mt-2">
-            {shuffledDefs.map(def => {
-              const paired   = isPairedDef(def.id);
-              const selected = rightSel === def.id;
-              return (
-                <motion.button
-                  key={def.id}
-                  onClick={() => handleDef(def.id)}
-                  whileTap={paired ? {} : { scale: 0.97 }}
-                  animate={{ opacity: paired ? 0.28 : 1 }}
-                  transition={{ duration: 0.2 }}
-                  className={`min-h-[66px] rounded-[14px] border-[2.5px] flex items-start text-left
-                    px-2.5 py-3 no-select transition-colors duration-150 ${
-                    paired
-                      ? 'bg-white/[.08] border-transparent pointer-events-none'
-                      : selected
-                      ? 'bg-green/[.13] border-green cursor-pointer'
-                      : 'bg-white/10 border-transparent hover:border-white/20 cursor-pointer'
-                  }`}
-                >
-                  <span className="font-serif italic text-[11.5px] leading-[1.42] text-bone/90">
-                    {def.text}
-                  </span>
-                </motion.button>
-              );
-            })}
-          </div>
+              {term}
+            </div>
+          ))}
         </div>
 
-        {/* Pairs */}
-        <AnimatePresence>
-          {pairs.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.22 }}
-              className="flex flex-col gap-[6px]"
-            >
-              <div className="flex items-center gap-2 mb-0.5">
-                <div className="w-[14px] h-[1.5px] rounded-full bg-green shrink-0" />
+        {/* Right: Definitions (draggable, positioned absolutely within relative container) */}
+        <div
+          style={{
+            position: 'relative',
+            height: `${Q5_DEFINITIONS.length * ROW_H + (Q5_DEFINITIONS.length - 1) * GAP}px`,
+          }}
+        >
+          {order.map((defId, naturalIdx) => {
+            // The initial natural position of this element IS its position in order on mount
+            // We track by storing data-natural as its CURRENT index in the initial order
+            // But since order changes, we track natural as the ORIGINAL mount index
+            const def = Q5_DEFINITIONS.find(d => d.id === defId);
+            if (!def) return null;
+
+            const isDragging = dragState.current?.id === defId;
+
+            return (
+              <div
+                key={defId}
+                ref={el => {
+                  elemRefs.current[defId] = el;
+                  if (el && !el.dataset.natural) {
+                    el.dataset.natural = String(naturalIdx);
+                  }
+                }}
+                onPointerDown={e => handlePointerDown(e, defId)}
+                onPointerMove={e => handlePointerMove(e, defId)}
+                onPointerUp={e => handlePointerUp(e, defId)}
+                onPointerCancel={e => handlePointerUp(e, defId)}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: `${ROW_H}px`,
+                  background: '#ffffff',
+                  color: '#1a1410',
+                  borderRadius: '18px',
+                  padding: '14px 32px 14px 18px',
+                  fontFamily: 'var(--font-serif)',
+                  fontSize: '11.5px',
+                  lineHeight: 1.32,
+                  overflow: 'hidden',
+                  boxShadow: isDragging
+                    ? '0 12px 32px -8px rgba(26,20,16,0.4), 0 0 0 2px #00ff00'
+                    : '0 2px 0 0 rgba(26,20,16,0.06), 0 4px 14px -6px rgba(26,20,16,0.15), 0 1px 2px rgba(26,20,16,0.06)',
+                  cursor: 'grab',
+                  userSelect: 'none',
+                  WebkitUserSelect: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  willChange: 'transform',
+                  // Transform is managed imperatively via ref, but set initial here
+                  transform: `translateY(${naturalIdx * (ROW_H + GAP)}px)`,
+                  zIndex: isDragging ? 10 : 1,
+                  transition: isDragging ? 'box-shadow 180ms ease-out' : undefined,
+                }}
+              >
+                <span>{def.text}</span>
+                {/* Drag handle */}
                 <span
-                  className="font-sans font-bold uppercase text-bone/30"
-                  style={{ fontSize: '0.55rem', letterSpacing: '0.13em' }}
+                  style={{
+                    position: 'absolute',
+                    top: '12px',
+                    right: '12px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '3px',
+                    opacity: 0.35,
+                    pointerEvents: 'none',
+                  }}
                 >
-                  Relacions fetes
+                  {[0, 1, 2].map(i => (
+                    <span
+                      key={i}
+                      style={{
+                        display: 'block',
+                        width: '14px',
+                        height: '1.5px',
+                        background: '#1a1410',
+                        borderRadius: '999px',
+                      }}
+                    />
+                  ))}
                 </span>
               </div>
-
-              {pairs.map((pair, idx) => (
-                <motion.div
-                  key={pair.term}
-                  initial={{ opacity: 0, scale: 0.88 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ type: 'spring', stiffness: 420, damping: 30 }}
-                  className="flex items-center gap-[6px] rounded-[10px] px-2.5 py-2"
-                  style={{ background: 'rgba(255,255,255,0.07)' }}
-                >
-                  <div className="w-5 h-5 rounded-full bg-green flex items-center justify-center shrink-0">
-                    <span className="font-display font-[900] text-[10px] leading-none text-ink">
-                      {idx + 1}
-                    </span>
-                  </div>
-
-                  <div className="shrink-0 rounded-full px-2.5 py-[3px]" style={{ background: 'rgba(255,255,255,0.12)' }}>
-                    <span className="font-display font-[700] text-[11px] text-bone whitespace-nowrap">
-                      {pair.term}
-                    </span>
-                  </div>
-
-                  <div className="flex-1 min-w-0 rounded-full px-2.5 py-[3px] overflow-hidden" style={{ background: 'rgba(255,255,255,0.12)' }}>
-                    <span className="font-serif text-[10px] text-bone/80 truncate block leading-snug">
-                      {getDefText(pair.defId)}
-                    </span>
-                  </div>
-
-                  <button
-                    onClick={() => removeMatch(pair.term)}
-                    aria-label="Elimina parella"
-                    className="w-[22px] h-[22px] rounded-full flex items-center justify-center shrink-0 text-[13px] font-bold no-select transition-colors duration-150 hover:border-green hover:text-green"
-                    style={{ border: '1.5px solid rgba(255,255,255,0.25)', color: 'rgba(255,255,255,0.4)', background: 'transparent' }}
-                  >
-                    ×
-                  </button>
-                </motion.div>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
+            );
+          })}
+        </div>
       </div>
     </div>
   );

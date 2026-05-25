@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Q1_PARTIES, Q1_POLITICIANS } from '@/data/quizData';
 import type { Q1Answer } from '@/data/types';
 
@@ -14,6 +14,14 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
+// Map politician name → initials for portrait circle
+const POL_INITIALS: Record<string, string> = {
+  'Ada Colau':       'AC',
+  'Laia Estrada':    'LE',
+  'Sílvia Orriols':  'SO',
+  'Míriam Nogueras': 'MN',
+};
+
 interface Props {
   value: Q1Answer;
   onChange: (v: Q1Answer) => void;
@@ -22,225 +30,290 @@ interface Props {
 export default function Q1Matching({ value, onChange }: Props) {
   const [shuffledPols] = useState(() => shuffle(Q1_POLITICIANS));
 
-  /* Independent left / right selection — either side can be selected first */
-  const [leftSel,  setLeftSel]  = useState<string | null>(null);
-  const [rightSel, setRightSel] = useState<string | null>(null);
+  const [selParty, setSelParty] = useState<string | null>(null);
+  const [selPol,   setSelPol]   = useState<string | null>(null);
 
-  const pairedParties = Object.keys(value);
-  const pairedPols    = Object.values(value);
+  const usedParties = Object.keys(value);
+  const usedPols    = Object.values(value);
 
-  function isPairedParty(p: string)  { return pairedParties.includes(p); }
-  function isPairedPol(p: string)    { return pairedPols.includes(p); }
+  const pairs = usedParties.map((party, i) => ({ party, pol: value[party], idx: i }));
 
-  function tryCreatePair(party: string | null, pol: string | null) {
+  function commit(party: string | null, pol: string | null) {
     if (!party || !pol) return;
     onChange({ ...value, [party]: pol });
-    setLeftSel(null);
-    setRightSel(null);
+    setSelParty(null);
+    setSelPol(null);
   }
 
-  function handleLeft(party: string) {
-    if (isPairedParty(party)) return;
-    if (leftSel === party) { setLeftSel(null); return; }
-    setLeftSel(party);
-    tryCreatePair(party, rightSel);
+  function handleParty(party: string) {
+    if (usedParties.includes(party)) return;
+    if (selParty === party) { setSelParty(null); return; }
+    const next = party;
+    setSelParty(next);
+    commit(next, selPol);
   }
 
-  function handleRight(pol: string) {
-    if (isPairedPol(pol)) return;
-    if (rightSel === pol) { setRightSel(null); return; }
-    setRightSel(pol);
-    tryCreatePair(leftSel, pol);
+  function handlePol(pol: string) {
+    if (usedPols.includes(pol)) return;
+    if (selPol === pol) { setSelPol(null); return; }
+    const next = pol;
+    setSelPol(next);
+    commit(selParty, next);
   }
 
-  function removeMatch(party: string) {
+  function removePair(party: string) {
     const next = { ...value };
     delete next[party];
-    onChange(next);
+    // Compact
+    const remaining = Object.entries(next);
+    const compacted: Q1Answer = {};
+    remaining.forEach(([p, po]) => { compacted[p] = po; });
+    onChange(compacted);
   }
 
-  const pairs = pairedParties.map(party => ({ party, pol: value[party] }));
-
   return (
-    <div className="flex flex-col gap-3">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
 
-      {/* Status line */}
-      <div className="relative h-[18px] overflow-hidden">
-        <AnimatePresence mode="wait">
-          {leftSel || rightSel ? (
-            <motion.div
-              key="sel"
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 6 }}
-              transition={{ duration: 0.18 }}
-              className="absolute inset-0 flex items-center gap-2"
-            >
-              <div className="w-[7px] h-[7px] rounded-full bg-green shrink-0" />
-              {leftSel && (
-                <span className="font-display font-[800] text-[12px] text-ink leading-none">
-                  &ldquo;{leftSel}&rdquo;
-                </span>
-              )}
-              {leftSel && rightSel && (
-                <span className="font-sans text-[11px] text-ink/45">+</span>
-              )}
-              {rightSel && (
-                <span className="font-display font-[800] text-[12px] text-ink leading-none">
-                  &ldquo;{rightSel}&rdquo;
-                </span>
-              )}
-              <span className="font-sans text-[11px] text-ink/45 leading-none">
-                — ara tria l&rsquo;altre costat
-              </span>
-            </motion.div>
-          ) : (
-            <motion.p
-              key="idle"
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 6 }}
-              transition={{ duration: 0.18 }}
-              className="absolute inset-0 flex items-center font-sans text-[10.5px] font-medium uppercase tracking-[0.12em] text-ink/35"
-            >
-              Relaciona cada partit amb la seva representant
-            </motion.p>
-          )}
-        </AnimatePresence>
-      </div>
+      {/* Two-column pill grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
 
-      {/* ── Dark match card ─────────────────────────── */}
-      <div className="bg-ink rounded-2xl px-4 pt-4 pb-5 flex flex-col gap-4">
-
-        {/* 2-col grid */}
-        <div className="grid grid-cols-2 gap-[5px] items-start">
-
-          {/* Left — parties */}
-          <div className="flex flex-col gap-[5px]">
-            {Q1_PARTIES.map(party => {
-              const paired   = isPairedParty(party);
-              const selected = leftSel === party;
-              return (
-                <motion.button
-                  key={party}
-                  onClick={() => handleLeft(party)}
-                  whileTap={paired ? {} : { scale: 0.95 }}
-                  animate={{ opacity: paired ? 0.28 : 1 }}
-                  transition={{ duration: 0.2 }}
-                  className={`min-h-[66px] rounded-[14px] border-[2.5px] flex items-center justify-center
-                    text-center px-2.5 py-3 no-select transition-colors duration-150 ${
-                    paired
-                      ? 'bg-white/10 border-transparent pointer-events-none'
-                      : selected
-                      ? 'bg-green/[.13] border-green cursor-pointer'
-                      : 'bg-white/10 border-transparent hover:border-white/20 cursor-pointer'
-                  }`}
-                >
-                  <span className="font-display font-[800] text-[15px] leading-snug text-bone">
-                    {party}
-                  </span>
-                </motion.button>
-              );
-            })}
-          </div>
-
-          {/* Right — politicians, offset 8px for asymmetry */}
-          <div className="flex flex-col gap-[5px] mt-2">
-            {shuffledPols.map(pol => {
-              const paired   = isPairedPol(pol);
-              const selected = rightSel === pol;
-              return (
-                <motion.button
-                  key={pol}
-                  onClick={() => handleRight(pol)}
-                  whileTap={paired ? {} : { scale: 0.95 }}
-                  animate={{ opacity: paired ? 0.28 : 1 }}
-                  transition={{ duration: 0.2 }}
-                  className={`min-h-[66px] rounded-[14px] border-[2.5px] flex items-center justify-center
-                    text-center px-2.5 py-3 no-select transition-colors duration-150 ${
-                    paired
-                      ? 'bg-white/10 border-transparent pointer-events-none'
-                      : selected
-                      ? 'bg-green/[.13] border-green cursor-pointer'
-                      : 'bg-white/10 border-transparent hover:border-white/20 cursor-pointer'
-                  }`}
-                >
-                  <span className="font-display font-[800] text-[14px] leading-snug text-bone">
-                    {pol}
-                  </span>
-                </motion.button>
-              );
-            })}
-          </div>
+        {/* Left — parties */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {Q1_PARTIES.map(party => {
+            const isUsed     = usedParties.includes(party);
+            const isSelected = selParty === party && !isUsed;
+            return (
+              <motion.button
+                key={party}
+                onClick={() => handleParty(party)}
+                whileTap={isUsed ? {} : { scale: 0.97 }}
+                disabled={isUsed}
+                className="no-select"
+                style={{
+                  background: isSelected ? '#00ff00' : '#ffffff',
+                  color: '#1a1410',
+                  border: 0,
+                  borderRadius: '999px',
+                  padding: '12px 16px',
+                  fontFamily: 'var(--font-display)',
+                  fontWeight: 800,
+                  fontSize: '13.5px',
+                  letterSpacing: 0,
+                  lineHeight: 1.1,
+                  cursor: isUsed ? 'default' : 'pointer',
+                  opacity: isUsed ? 0.3 : 1,
+                  pointerEvents: isUsed ? 'none' : 'auto',
+                  minHeight: '48px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  width: '100%',
+                  textAlign: 'left',
+                  boxShadow: isSelected
+                    ? '0 0 0 2px #1a1410, 0 6px 18px -6px rgba(0,255,0,0.5)'
+                    : '0 2px 0 0 rgba(26,20,16,0.06), 0 4px 14px -6px rgba(26,20,16,0.18)',
+                  transition: 'background 220ms, box-shadow 220ms, opacity 220ms',
+                }}
+              >
+                {party}
+              </motion.button>
+            );
+          })}
         </div>
 
-        {/* ── Pairs ─────────────────────────────────── */}
-        <AnimatePresence>
-          {pairs.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.22 }}
-              className="flex flex-col gap-[6px]"
-            >
-              {/* Label */}
-              <div className="flex items-center gap-2 mb-0.5">
-                <div className="w-[14px] h-[1.5px] rounded-full bg-green shrink-0" />
-                <span
-                  className="font-sans font-bold uppercase text-bone/30"
-                  style={{ fontSize: '0.55rem', letterSpacing: '0.13em' }}
-                >
-                  Relacions fetes
+        {/* Right — politicians (portrait pill) */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {shuffledPols.map(pol => {
+            const isUsed     = usedPols.includes(pol);
+            const isSelected = selPol === pol && !isUsed;
+            return (
+              <motion.button
+                key={pol}
+                onClick={() => handlePol(pol)}
+                whileTap={isUsed ? {} : { scale: 0.97 }}
+                disabled={isUsed}
+                className="no-select"
+                style={{
+                  background: isSelected ? '#00ff00' : '#ffffff',
+                  color: '#1a1410',
+                  border: 0,
+                  borderRadius: '999px',
+                  padding: '6px 6px 6px 16px',
+                  fontFamily: 'var(--font-display)',
+                  fontWeight: 800,
+                  fontSize: '12.5px',
+                  letterSpacing: 0,
+                  lineHeight: 1.1,
+                  cursor: isUsed ? 'default' : 'pointer',
+                  opacity: isUsed ? 0.3 : 1,
+                  pointerEvents: isUsed ? 'none' : 'auto',
+                  minHeight: '52px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '10px',
+                  width: '100%',
+                  boxShadow: isSelected
+                    ? '0 0 0 2px #1a1410, 0 6px 18px -6px rgba(0,255,0,0.5)'
+                    : '0 2px 0 0 rgba(26,20,16,0.06), 0 4px 14px -6px rgba(26,20,16,0.18)',
+                  transition: 'background 220ms, box-shadow 220ms, opacity 220ms',
+                }}
+              >
+                <span style={{ lineHeight: 1.1 }}>
+                  {pol.split(' ').map((word, i) => (
+                    <span key={i}>{word}{i === 0 ? <br /> : ''}</span>
+                  ))}
                 </span>
-              </div>
-
-              {pairs.map((pair, idx) => (
-                <motion.div
-                  key={pair.party}
-                  initial={{ opacity: 0, scale: 0.88 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ type: 'spring', stiffness: 420, damping: 30 }}
-                  className="flex items-center gap-[6px] rounded-[10px] px-2.5 py-2"
-                  style={{ background: 'rgba(255,255,255,0.07)' }}
+                {/* Portrait circle */}
+                <span
+                  style={{
+                    flexShrink: 0,
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    background: '#b8b3af',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                  }}
                 >
-                  {/* Number */}
-                  <div className="w-5 h-5 rounded-full bg-green flex items-center justify-center shrink-0">
-                    <span className="font-display font-[900] text-[10px] leading-none text-ink">
-                      {idx + 1}
-                    </span>
-                  </div>
-
-                  {/* Party pill */}
-                  <div className="shrink-0 rounded-full px-2.5 py-[3px]" style={{ background: 'rgba(255,255,255,0.12)' }}>
-                    <span className="font-display font-[700] text-[11px] text-bone whitespace-nowrap">
-                      {pair.party}
-                    </span>
-                  </div>
-
-                  {/* Pol pill */}
-                  <div className="flex-1 min-w-0 rounded-full px-2.5 py-[3px] overflow-hidden" style={{ background: 'rgba(255,255,255,0.12)' }}>
-                    <span className="font-display font-[700] text-[11px] text-bone truncate block">
-                      {pair.pol}
-                    </span>
-                  </div>
-
-                  {/* Remove */}
-                  <button
-                    onClick={() => removeMatch(pair.party)}
-                    aria-label="Elimina parella"
-                    className="w-[22px] h-[22px] rounded-full flex items-center justify-center shrink-0 text-[13px] font-bold no-select transition-colors duration-150 hover:border-green hover:text-green"
-                    style={{ border: '1.5px solid rgba(255,255,255,0.25)', color: 'rgba(255,255,255,0.4)', background: 'transparent' }}
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-display)',
+                      fontWeight: 900,
+                      fontSize: '11px',
+                      color: '#1a1410',
+                    }}
                   >
-                    ×
-                  </button>
-                </motion.div>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
+                    {POL_INITIALS[pol] ?? pol.slice(0, 2)}
+                  </span>
+                </span>
+              </motion.button>
+            );
+          })}
+        </div>
+      </div>
 
+      {/* Pair rows */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '4px' }}>
+        {Array.from({ length: 4 }).map((_, i) => {
+          const pair = pairs[i];
+          const isFilled = !!pair;
+          return (
+            <div
+              key={i}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '22px 1fr 1fr 22px',
+                gap: '6px',
+                alignItems: 'center',
+              }}
+            >
+              {/* Badge */}
+              <span
+                style={{
+                  width: '22px',
+                  height: '22px',
+                  borderRadius: '50%',
+                  background: isFilled ? '#00ff00' : 'rgba(26,20,16,0.06)',
+                  color: isFilled ? '#1a1410' : 'rgba(26,20,16,0.4)',
+                  border: isFilled ? '1px solid #00ff00' : '1px solid rgba(26,20,16,0.15)',
+                  fontFamily: 'var(--font-display)',
+                  fontWeight: 900,
+                  fontSize: '11px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'background 220ms, color 220ms, border-color 220ms',
+                  flexShrink: 0,
+                }}
+              >
+                {i + 1}
+              </span>
+
+              {/* Slot: party */}
+              <span
+                style={{
+                  height: '28px',
+                  borderRadius: '999px',
+                  border: isFilled ? '1px solid rgba(26,20,16,0.2)' : '1px solid rgba(26,20,16,0.15)',
+                  background: isFilled ? 'rgba(26,20,16,0.04)' : 'transparent',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '0 12px',
+                  fontFamily: 'var(--font-display)',
+                  fontWeight: 800,
+                  fontSize: '10.5px',
+                  letterSpacing: '0.08em',
+                  color: isFilled ? '#1a1410' : 'rgba(26,20,16,0.4)',
+                  textTransform: 'uppercase',
+                  minWidth: 0,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  transition: 'background 220ms, color 220ms, border-color 220ms',
+                }}
+              >
+                {pair ? pair.party : 'Partit'}
+              </span>
+
+              {/* Slot: politician */}
+              <span
+                style={{
+                  height: '28px',
+                  borderRadius: '999px',
+                  border: isFilled ? '1px solid rgba(26,20,16,0.2)' : '1px solid rgba(26,20,16,0.15)',
+                  background: isFilled ? 'rgba(26,20,16,0.04)' : 'transparent',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '0 12px',
+                  fontFamily: 'var(--font-display)',
+                  fontWeight: 800,
+                  fontSize: '10.5px',
+                  letterSpacing: '0.08em',
+                  color: isFilled ? '#1a1410' : 'rgba(26,20,16,0.4)',
+                  textTransform: 'uppercase',
+                  minWidth: 0,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  transition: 'background 220ms, color 220ms, border-color 220ms',
+                }}
+              >
+                {pair ? pair.pol : 'Polític'}
+              </span>
+
+              {/* Remove button */}
+              <button
+                onClick={() => pair && removePair(pair.party)}
+                disabled={!isFilled}
+                aria-label="Treure"
+                className="no-select"
+                style={{
+                  width: '22px',
+                  height: '22px',
+                  borderRadius: '50%',
+                  background: 'transparent',
+                  border: '1px solid rgba(26,20,16,0.15)',
+                  color: 'rgba(26,20,16,0.5)',
+                  fontSize: '12px',
+                  lineHeight: 1,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: 0,
+                  opacity: isFilled ? 1 : 0,
+                  pointerEvents: isFilled ? 'auto' : 'none',
+                  transition: 'opacity 180ms',
+                  flexShrink: 0,
+                }}
+              >
+                ×
+              </button>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

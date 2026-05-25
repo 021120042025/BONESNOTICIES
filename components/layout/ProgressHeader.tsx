@@ -1,6 +1,5 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import type { Step } from '@/data/types';
 
 const Q_STEPS: Step[] = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8'];
@@ -14,72 +13,112 @@ export default function ProgressHeader({ step }: Props) {
   const isQuestion = qIdx >= 0;
   const isResults  = step === 'results';
 
-  return (
-    <header className="bg-bg px-5 pt-3 pb-2 shrink-0">
-      {/* Row 1: brand | progress strip | counter */}
-      <div className="flex items-center gap-3">
+  const counterText = isResults
+    ? 'RESULTATS'
+    : isQuestion
+    ? `${qIdx + 1} / 8`
+    : '— / 8';
 
-        {/* Logo */}
-        <div className="shrink-0 flex items-center gap-[5px]">
-          <span
-            className="font-display font-black text-bone uppercase leading-none"
-            style={{ fontSize: '1.1rem', letterSpacing: '-0.02em' }}
+  const kickerText = isResults
+    ? 'Edició final · Llegit i puntuat'
+    : isQuestion
+    ? `Pregunta ${qIdx + 1} de 8`
+    : null;
+
+  return (
+    <header
+      className="bg-bg shrink-0 flex flex-col"
+      style={{ padding: '54px 22px 20px', gap: '16px' }}
+    >
+      {/* qhead: title + counter row + progress strip */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        {/* Row: brand title | counter */}
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '12px' }}>
+          <div
+            className="text-bone whitespace-nowrap"
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontWeight: 900,
+              fontSize: '22px',
+              letterSpacing: '-0.02em',
+              lineHeight: 1,
+            }}
           >
             Bones Notícies
-          </span>
-          <div className="w-2 h-2 rounded-full bg-green self-start mt-0.5" />
+          </div>
+          <div
+            className="whitespace-nowrap"
+            style={{
+              fontFamily: 'var(--font-sans)',
+              fontWeight: 500,
+              fontSize: '12px',
+              letterSpacing: '0.06em',
+              color: 'rgba(236,233,233,0.6)',
+            }}
+          >
+            {counterText}
+          </div>
         </div>
 
-        {/* 8-segment strip */}
-        <div className="flex-1 flex items-center gap-[5px]">
+        {/* 8-segment progress strip */}
+        <div
+          style={{
+            display: 'grid',
+            gridAutoFlow: 'column',
+            gridAutoColumns: '1fr',
+            gap: '6px',
+            alignItems: 'center',
+          }}
+        >
           {Q_STEPS.map((_, i) => {
             const isDone   = isResults || i < qIdx;
             const isActive = isQuestion && i === qIdx;
             return (
-              <motion.div
+              <div
                 key={i}
-                className="flex-1 h-[4px] rounded-full origin-center"
                 style={{
+                  height: isActive ? '5px' : '4px',
                   background: isActive
                     ? '#00ff00'
                     : isDone
-                    ? 'rgba(255,255,255,0.40)'
-                    : 'rgba(255,255,255,0.15)',
+                    ? 'rgba(236,233,233,0.45)'
+                    : 'rgba(236,233,233,0.18)',
+                  borderRadius: '999px',
+                  transition: 'background 260ms, height 260ms',
                 }}
-                animate={{ scaleY: isActive ? 1.8 : 1 }}
-                transition={{ duration: 0.25 }}
               />
             );
           })}
         </div>
-
-        {/* Counter */}
-        <div className="shrink-0">
-          {isQuestion ? (
-            <span
-              className="font-sans text-bone-dim tabular-nums"
-              style={{ fontSize: '0.6rem', letterSpacing: '0.12em', textTransform: 'uppercase' }}
-            >
-              {qIdx + 1} / 8
-            </span>
-          ) : isResults ? (
-            <div className="w-5 h-5 rounded-full bg-green flex items-center justify-center">
-              <span className="text-[9px] font-black text-ink">✓</span>
-            </div>
-          ) : null}
-        </div>
       </div>
 
-      {/* Row 2 (question only): green dash + muted label */}
-      {isQuestion && (
-        <div className="flex items-center gap-[8px] mt-[7px]">
-          <div className="w-4 h-[1.5px] rounded-full bg-green shrink-0" />
+      {/* Kicker: green dash + label */}
+      {kickerText && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            fontFamily: 'var(--font-sans)',
+            fontWeight: 500,
+            fontSize: '10.5px',
+            letterSpacing: '0.22em',
+            textTransform: 'uppercase',
+            color: 'rgba(236,233,233,0.55)',
+            paddingTop: '4px',
+          }}
+        >
           <span
-            className="font-sans uppercase text-bone/30"
-            style={{ fontSize: '0.55rem', letterSpacing: '0.14em' }}
-          >
-            Pregunta {qIdx + 1} de 8
-          </span>
+            style={{
+              display: 'inline-block',
+              width: '18px',
+              height: '2px',
+              background: '#00ff00',
+              borderRadius: '999px',
+              flexShrink: 0,
+            }}
+          />
+          {kickerText}
         </div>
       )}
     </header>

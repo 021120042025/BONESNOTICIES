@@ -214,11 +214,11 @@ export function computeScore(answers: QuizAnswers): ScoreResult {
 // Question text used by NarratorBubble
 export const QUESTION_TEXTS: Record<string, string> = {
   q1: "Relaciona els següents polítics amb el partit del qual formen part.",
-  q2: "On es reuneixen?",
+  q2: "On para cadascú? Identifica les institucions on actuen aquestes coses.",
   q3: "Quins dels següents temes ocupen actualment el debat al Parlament de Catalunya?",
-  q4: "Com funciona el sistema electoral espanyol?",
+  q4: "Com s'organitza el repartiment d'escons?",
   q5: "Reordena les següents definicions amb el seu terme corresponent.",
-  q6: "Quina posició política sobre l'habitatge correspon a cada partit?",
+  q6: "Quin partit polític defensa cada una d'aquestes postures sobre l'habitatge?",
   q7: "Quins dels següents personatges polítics ocupen actualment el debat mediàtic?",
-  q8: "Veritat o fals?",
+  q8: "Veritat o fals? Tria sense pensar-ho gaire.",
 };
