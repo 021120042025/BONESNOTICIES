@@ -46,22 +46,74 @@ body {
 
 .no-select { -webkit-user-select: none; user-select: none; }
 
-/* Speech bubble tail pointing left (for dark zone) */
-.bubble-tail::before {
-  content: '';
-  position: absolute;
-  left: -12px;
-  top: 18px;
-  border-width: 7px 12px 7px 0;
-  border-style: solid;
-  border-color: transparent #3a302a transparent transparent;
-}
-.bubble-tail::after {
-  content: '';
-  position: absolute;
-  left: -9px;
-  top: 20px;
-  border-width: 5px 10px 5px 0;
-  border-style: solid;
-  border-color: transparent #2b231d transparent transparent;
-}
+/* ── Question illustration animations ─────────────── */
+@keyframes qPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.12)} }
+@keyframes qFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+@keyframes qWave  { 0%,100%{transform:scaleX(1)} 50%{transform:scaleX(1.08)} }
+@keyframes qBlink { 0%,100%{opacity:1} 50%{opacity:.25} }
+@keyframes qGrow  { 0%,100%{transform:scaleY(1)} 50%{transform:scaleY(1.18)} }
+@keyframes qSpin  { to{transform:rotate(360deg)} }
+
+/* Q1 – parlament */
+.qa-1 { position:relative; width:100%; height:100%; }
+.qa-1 .qa-row { position:absolute; left:12px; right:12px; height:14px; border-radius:4px; background:rgba(38,30,25,.18); }
+.qa-1 .qa-row:nth-child(1){bottom:28px;}
+.qa-1 .qa-row:nth-child(2){bottom:10px; right:60px;}
+.qa-1 .qa-dot { position:absolute; right:14px; bottom:16px; width:34px; height:34px; border-radius:50%; background:#00ff00; animation:qPulse 2.2s ease-in-out infinite; }
+
+/* Q2 – bulo */
+.qa-2 { position:relative; width:100%; height:100%; }
+.qa-2 .qa-line { position:absolute; width:70px; height:5px; border-radius:3px; background:rgba(38,30,25,.2); top:50%; left:50%; transform:translate(-50%,-50%); }
+.qa-2 .qa-line:nth-child(2){transform:translate(-50%,-50%) translateY(16px);}
+.qa-2 .qa-line:nth-child(3){transform:translate(-50%,-50%) translateY(32px);}
+.qa-2 .qa-x { position:absolute; right:18px; bottom:14px; width:36px; height:36px; }
+.qa-2 .qa-x::before,.qa-2 .qa-x::after { content:''; position:absolute; width:100%; height:4px; background:#00ff00; border-radius:2px; top:50%; left:0; transform-origin:center; animation:qBlink 1.8s ease-in-out infinite; }
+.qa-2 .qa-x::before{transform:translateY(-50%) rotate(45deg);}
+.qa-2 .qa-x::after{transform:translateY(-50%) rotate(-45deg); animation-delay:.9s;}
+
+/* Q3 – urna */
+.qa-3 { position:relative; width:100%; height:100%; }
+.qa-3 .qa-box { position:absolute; bottom:14px; left:50%; transform:translateX(-50%); width:52px; height:36px; border-radius:5px; background:rgba(38,30,25,.15); border:2.5px solid rgba(38,30,25,.25); }
+.qa-3 .qa-paper { position:absolute; bottom:46px; left:50%; transform:translateX(-50%); width:20px; height:28px; border-radius:3px 3px 0 0; background:#00ff00; animation:qFloat 2s ease-in-out infinite; }
+
+/* Q4 – balanç */
+.qa-4 { position:relative; width:100%; height:100%; }
+.qa-4 .qa-bar { position:absolute; bottom:50%; left:50%; transform:translate(-50%,50%); width:3px; height:48px; background:rgba(38,30,25,.3); border-radius:2px; }
+.qa-4 .qa-arm { position:absolute; bottom:calc(50% + 20px); left:50%; transform:translateX(-50%); width:70px; height:3px; background:rgba(38,30,25,.25); border-radius:2px; }
+.qa-4 .qa-plate { position:absolute; width:26px; height:8px; border-radius:3px; bottom:calc(50% - 2px); background:#00ff00; }
+.qa-4 .qa-plate.l { left:calc(50% - 47px); animation:qFloat 2.8s ease-in-out infinite; }
+.qa-4 .qa-plate.r { right:calc(50% - 47px); animation:qFloat 2.8s ease-in-out infinite .7s; }
+
+/* Q5 – mòbil */
+.qa-5 { position:relative; width:100%; height:100%; }
+.qa-5 .qa-phone { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); width:44px; height:78px; border-radius:9px; border:3px solid rgba(38,30,25,.25); background:rgba(38,30,25,.08); }
+.qa-5 .qa-notif { position:absolute; top:18px; right:calc(50% - 38px); width:16px; height:16px; border-radius:50%; background:#00ff00; animation:qPulse 1.6s ease-in-out infinite; }
+
+/* Q6 – percentatge */
+.qa-6 { position:relative; width:100%; height:100%; }
+.qa-6 .qa-pct { position:absolute; bottom:14px; left:14px; right:14px; height:10px; border-radius:5px; background:rgba(38,30,25,.12); overflow:hidden; }
+.qa-6 .qa-fill { height:100%; width:38%; border-radius:5px; background:#00ff00; animation:qWave 2.4s ease-in-out infinite; transform-origin:left; }
+.qa-6 .qa-label { position:absolute; bottom:32px; left:14px; font-weight:900; font-size:2.2rem; color:rgba(38,30,25,.18); letter-spacing:-.02em; line-height:1; }
+
+/* Q7 – xarxes */
+.qa-7 { position:relative; width:100%; height:100%; }
+.qa-7 .qa-node { position:absolute; border-radius:50%; background:rgba(38,30,25,.15); }
+.qa-7 .qa-node.c { width:28px; height:28px; top:50%; left:50%; transform:translate(-50%,-50%); background:#00ff00; animation:qPulse 2s ease-in-out infinite; }
+.qa-7 .qa-node.a { width:16px; height:16px; top:28%; left:26%; }
+.qa-7 .qa-node.b { width:16px; height:16px; top:28%; right:26%; }
+.qa-7 .qa-node.d { width:16px; height:16px; bottom:24%; left:26%; }
+.qa-7 .qa-node.e { width:16px; height:16px; bottom:24%; right:26%; }
+.qa-7 .qa-line { position:absolute; width:2px; background:rgba(38,30,25,.12); top:50%; left:50%; transform-origin:top; }
+.qa-7 .qa-line:nth-child(1){height:30px; transform:translate(-50%,-50%) rotate(-35deg) translateY(-50%);}
+.qa-7 .qa-line:nth-child(2){height:30px; transform:translate(-50%,-50%) rotate(35deg)  translateY(-50%);}
+.qa-7 .qa-line:nth-child(3){height:30px; transform:translate(-50%,-50%) rotate(145deg) translateY(-50%);}
+.qa-7 .qa-line:nth-child(4){height:30px; transform:translate(-50%,-50%) rotate(215deg) translateY(-50%);}
+
+/* Q8 – senat */
+.qa-8 { position:relative; width:100%; height:100%; }
+.qa-8 .qa-col { position:absolute; bottom:14px; width:8px; border-radius:3px 3px 0 0; background:rgba(38,30,25,.18); }
+.qa-8 .qa-col:nth-child(1){left:22%; height:44px;}
+.qa-8 .qa-col:nth-child(2){left:38%; height:56px; background:#00ff00; animation:qGrow 2.4s ease-in-out infinite; transform-origin:bottom;}
+.qa-8 .qa-col:nth-child(3){left:54%; height:38px;}
+.qa-8 .qa-col:nth-child(4){left:70%; height:50px;}
+.qa-8 .qa-base { position:absolute; bottom:12px; left:14px; right:14px; height:3px; border-radius:2px; background:rgba(38,30,25,.2); }

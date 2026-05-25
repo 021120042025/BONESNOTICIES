@@ -1,45 +1,51 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { NARRATORS } from '@/data/quizData';
 
 interface Props {
   narratorId: string | null;
   text: string;
-  questionNumber?: number;
 }
 
 export default function NarratorBubble({ narratorId, text }: Props) {
   const narrator = NARRATORS.find(n => n.id === narratorId) ?? NARRATORS[0];
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: 0.05 }}
-      className="flex items-start gap-3 px-4 pt-3 pb-5 bg-bg"
-    >
-      {/* Avatar + name */}
-      <div className="shrink-0 flex flex-col items-center gap-1.5">
-        <div
-          className="w-[72px] h-[72px] bg-bg-soft border border-bone/10 flex items-center justify-center"
-          style={{ borderRadius: '14px' }}
-        >
-          <span className="font-display font-black text-xl text-bone tracking-tight">
-            {narrator.initials}
-          </span>
-        </div>
-        <span className="font-sans font-bold text-[11px] uppercase tracking-[0.16em] text-green text-center leading-tight max-w-[72px]">
-          {narrator.name.split(' ')[0]}
+    <div className="flex items-end gap-[14px] px-5 pt-3 pb-5 bg-bg">
+      {/* Avatar — 64×64, 10px radius, green border, initials */}
+      <div
+        className="shrink-0 w-16 h-16 border-2 border-green flex items-center justify-center overflow-hidden"
+        style={{ borderRadius: '10px', background: 'rgba(255,255,255,0.04)' }}
+      >
+        <span className="font-display font-black text-[18px] text-bone tracking-tight">
+          {narrator.initials}
         </span>
       </div>
 
-      {/* Speech bubble */}
-      <div className="bubble-tail relative flex-1 bg-bg-soft border border-bone/[0.06] rounded-2xl rounded-tl-sm px-4 py-3">
-        <p className="font-serif text-[14.5px] leading-[1.32] text-bone">
+      {/* Speech bubble — tail at bottom-left (border-radius: 12px 12px 12px 4px) */}
+      <div
+        className="flex-1 px-[14px] py-[11px]"
+        style={{
+          background: 'rgba(255,255,255,0.07)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          borderRadius: '12px 12px 12px 4px',
+        }}
+      >
+        {/* Narrator name */}
+        <p
+          className="font-sans font-bold uppercase text-green mb-1"
+          style={{ fontSize: '0.55rem', letterSpacing: '0.1em' }}
+        >
+          {narrator.name}
+        </p>
+        {/* Question text */}
+        <p
+          className="font-serif text-bone"
+          style={{ fontSize: 'clamp(0.92rem, 3.8vw, 1.08rem)', lineHeight: 1.5 }}
+        >
           {text}
         </p>
       </div>
-    </motion.div>
+    </div>
   );
 }
