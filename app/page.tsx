@@ -78,15 +78,12 @@ useEffect(() => {
   if (step === 'results' && !savedRef.current) {
     savedRef.current = true;
   } else if (step !== 'results') {
-    savedRef.current = false;
+    savedRef.current = false; // allow saving again after restart
   }
 }, [step, answers, narrator]);
     }
-    if (step === 'landing') {
-      savedRef.current = false; // allow saving again after restart
-    }
-  }, [step, answers, narrator]);
 
+  
   function handleGoNext() {
     prevStepIdx.current = currIdx;
     goNext();
