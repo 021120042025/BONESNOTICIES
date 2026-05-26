@@ -8,17 +8,19 @@ import type { QuizAnswers } from '@/data/types';
  */
 export async function saveResponse(
   answers: QuizAnswers,
-  narrator: string,
+  narrator: string | null,
 ): Promise<void> {
   const { scoreOutOf10 } = computeScore(answers);
 
-  const { error } = await supabase.from('responses').insert({
-    score:    scoreOutOf10,
-    narrator,
-    answers,             // stored as jsonb
-  });
+  console.log('TRYING TO INSERT');
 
-  if (error) {
-    console.error('[saveResponse] Failed to save quiz result:', error.message);
-  }
-}
+const { data, error } = await supabase
+  .from('responses')
+  .insert({
+    score: scoreOutOf10,
+    narrator,
+    answers,
+  })
+  .select();
+
+console.log('SUPABASE RESPONSE:', { data, error });
