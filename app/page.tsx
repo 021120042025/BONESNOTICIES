@@ -72,12 +72,13 @@ export default function Home() {
 
   // Persist result exactly once when the results screen is entered.
   // savedRef guards against double-fires on re-render; reset on restart.
-  useEffect(() => 
-    console.log('CURRENT STEP:', step);
+useEffect(() => {
+  console.log('CURRENT STEP:', step);
 
-    if (step === 'results' && !savedRef.current) {
-      savedRef.current = true;
-      alert('SAVE RESPONSE IS RUNNING');
+  if (step === 'results' && !savedRef.current) {
+    savedRef.current = true;
+  }
+}, [step]);
 
 saveResponse(answers, narrator);
     }
