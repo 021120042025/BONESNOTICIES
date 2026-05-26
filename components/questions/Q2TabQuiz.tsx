@@ -15,6 +15,12 @@ const PHOTO_LABELS: Record<string, string> = {
   europeu:  'Parlament Europeu · Brussel·les',
 };
 
+const PHOTO_IMAGES: Record<string, string> = {
+  congres:  '/images/q2/congres.jpg',
+  parlament: '/images/q2/parlament.jpg',
+  europeu:  '/images/q2/europeu.jpg',
+};
+
 export default function Q2TabQuiz({ value, onChange }: Props) {
   const [current, setCurrent] = useState(() => {
     const first = Q2_MINI.findIndex((_, i) => value[i] === undefined);
@@ -120,27 +126,42 @@ export default function Q2TabQuiz({ value, onChange }: Props) {
                 transition: 'transform 360ms cubic-bezier(.2,.7,.2,1), opacity 360ms cubic-bezier(.2,.7,.2,1)',
               }}
             >
-              {/* Photo placeholder */}
+              {/* Photo */}
               <div
                 style={{
                   width: '100%',
                   height: '110px',
                   borderRadius: '14px',
                   overflow: 'hidden',
-                  background: 'repeating-linear-gradient(45deg, rgba(26,20,16,0.05) 0 2px, transparent 2px 9px), linear-gradient(180deg, #e2ddd6 0%, #cdc7be 100%)',
-                  color: 'rgba(26,20,16,0.45)',
-                  fontFamily: 'var(--font-sans)',
-                  fontSize: '9.5px',
-                  letterSpacing: '0.2em',
-                  textTransform: 'uppercase',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  textAlign: 'center',
-                  padding: '8px',
                 }}
               >
-                {PHOTO_LABELS[mini.image] ?? ''}
+                {PHOTO_IMAGES[mini.image] ? (
+                  <img
+                    src={PHOTO_IMAGES[mini.image]}
+                    alt={PHOTO_LABELS[mini.image] ?? ''}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      background: 'repeating-linear-gradient(45deg, rgba(26,20,16,0.05) 0 2px, transparent 2px 9px), linear-gradient(180deg, #e2ddd6 0%, #cdc7be 100%)',
+                      color: 'rgba(26,20,16,0.45)',
+                      fontFamily: 'var(--font-sans)',
+                      fontSize: '9.5px',
+                      letterSpacing: '0.2em',
+                      textTransform: 'uppercase',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      textAlign: 'center',
+                      padding: '8px',
+                    }}
+                  >
+                    {PHOTO_LABELS[mini.image] ?? ''}
+                  </div>
+                )}
               </div>
 
               {/* Question */}

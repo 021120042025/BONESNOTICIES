@@ -14,12 +14,20 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-// Map politician name → initials for portrait circle
+// Map politician name → initials (fallback)
 const POL_INITIALS: Record<string, string> = {
   'Ada Colau':       'AC',
   'Laia Estrada':    'LE',
   'Sílvia Orriols':  'SO',
   'Míriam Nogueras': 'MN',
+};
+
+// Map politician name → portrait image
+const POL_IMAGES: Record<string, string> = {
+  'Ada Colau':       '/images/q1/ada-colau.png',
+  'Laia Estrada':    '/images/q1/laia-estrada.png',
+  'Sílvia Orriols':  '/images/q1/silvia-orriols.png',
+  'Míriam Nogueras': '/images/q1/miriam-nogueras.png',
 };
 
 interface Props {
@@ -177,16 +185,24 @@ export default function Q1Matching({ value, onChange }: Props) {
                     overflow: 'hidden',
                   }}
                 >
-                  <span
-                    style={{
-                      fontFamily: 'var(--font-display)',
-                      fontWeight: 900,
-                      fontSize: '11px',
-                      color: '#1a1410',
-                    }}
-                  >
-                    {POL_INITIALS[pol] ?? pol.slice(0, 2)}
-                  </span>
+                  {POL_IMAGES[pol] ? (
+                    <img
+                      src={POL_IMAGES[pol]}
+                      alt={pol}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', display: 'block' }}
+                    />
+                  ) : (
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-display)',
+                        fontWeight: 900,
+                        fontSize: '11px',
+                        color: '#1a1410',
+                      }}
+                    >
+                      {POL_INITIALS[pol] ?? pol.slice(0, 2)}
+                    </span>
+                  )}
                 </span>
               </motion.button>
             );

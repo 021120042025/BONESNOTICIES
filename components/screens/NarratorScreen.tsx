@@ -4,6 +4,15 @@ import { motion } from 'framer-motion';
 import { NARRATORS } from '@/data/quizData';
 import ProgressHeader from '../layout/ProgressHeader';
 
+const NARRATOR_IMAGES: Record<string, string> = {
+  'marc-giro':       '/images/narrators/marc-giro.png',
+  'jordi-evole':     '/images/narrators/jordi-evole.png',
+  'juana-dolores':   '/images/narrators/juana-dolores.png',
+  'alba-riera':      '/images/narrators/alba-riera.png',
+  'samantha-hudson': '/images/narrators/samantha-hudson.png',
+  'roma-gallardo':   '/images/narrators/roma-gallardo.png',
+};
+
 interface Props {
   selected: string | null;
   onSelect: (id: string) => void;
@@ -52,14 +61,22 @@ export default function NarratorScreen({ selected, onSelect, onContinue }: Props
                 >
                   {/* Avatar */}
                   <div
-                    className={`w-16 h-16 border-2 flex items-center justify-center mb-2.5 ${
-                      isSelected ? 'bg-green border-green' : 'bg-light border-ink/15'
+                    className={`w-16 h-16 border-2 mb-2.5 ${
+                      isSelected ? 'border-green' : 'border-ink/15'
                     }`}
-                    style={{ borderRadius: '12px' }}
+                    style={{ borderRadius: '12px', overflow: 'hidden' }}
                   >
-                    <span className="font-display font-black text-xl leading-none tracking-tight text-ink">
-                      {narrator.initials}
-                    </span>
+                    {NARRATOR_IMAGES[narrator.id] ? (
+                      <img
+                        src={NARRATOR_IMAGES[narrator.id]}
+                        alt={narrator.name}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                      />
+                    ) : (
+                      <span className="font-display font-black text-xl leading-none tracking-tight text-ink">
+                        {narrator.initials}
+                      </span>
+                    )}
                   </div>
 
                   {/* Name */}

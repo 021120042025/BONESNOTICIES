@@ -5,6 +5,15 @@ import type { Q7Answer } from '@/data/types';
 
 const MAX = 3;
 
+const FIG_IMAGES: Record<string, string> = {
+  'rufian':      '/images/q7/rufian.png',
+  'ayuso':       '/images/q7/ayuso.png',
+  'yolanda':     '/images/q7/yolanda.png',
+  'rivera':      '/images/q7/rivera.png',
+  'artur-mas':   '/images/q7/artur-mas.png',
+  'jordi-pujol': '/images/q7/jordi-pujol.png',
+};
+
 interface Props {
   value: Q7Answer;
   onChange: (v: Q7Answer) => void;
@@ -113,23 +122,38 @@ export default function Q7MediaFigures({ value, onChange }: Props) {
                   background: '#e0dbd5',
                   borderRadius: '10px',
                   overflow: 'hidden',
-                  display: 'flex',
-                  alignItems: 'flex-end',
-                  justifyContent: 'center',
                   minHeight: '72px',
                 }}
               >
-                <span
-                  style={{
-                    fontFamily: 'var(--font-display)',
-                    fontWeight: 900,
-                    fontSize: '22px',
-                    color: selected ? '#1a1410' : '#6a6360',
-                    paddingBottom: '8px',
-                  }}
-                >
-                  {fig.initials}
-                </span>
+                {FIG_IMAGES[fig.id] ? (
+                  <img
+                    src={FIG_IMAGES[fig.id]}
+                    alt={fig.name}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', display: 'block' }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      display: 'flex',
+                      alignItems: 'flex-end',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-display)',
+                        fontWeight: 900,
+                        fontSize: '22px',
+                        color: selected ? '#1a1410' : '#6a6360',
+                        paddingBottom: '8px',
+                      }}
+                    >
+                      {fig.initials}
+                    </span>
+                  </div>
+                )}
               </div>
               {/* Name */}
               <div

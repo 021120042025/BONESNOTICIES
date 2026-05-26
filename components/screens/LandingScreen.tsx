@@ -44,18 +44,12 @@ export default function LandingScreen({ onStart }: Props) {
         transition={{ duration: 0.5, delay: 0.1 }}
         className="relative mb-6"
       >
-        <div className="aspect-[4/3] bg-bg-soft rounded-2xl border border-line overflow-hidden flex items-center justify-center relative">
-          <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 gap-px opacity-10">
-            {Array.from({ length: 9 }).map((_, i) => (
-              <div key={i} className={i % 3 === 1 ? 'bg-green' : 'bg-bone'} />
-            ))}
-          </div>
-          <div className="relative z-10 text-center px-6">
-            <p className="font-display font-black text-[64px] leading-none text-bone tracking-[-0.05em]">?</p>
-            <p className="font-sans font-medium text-bone-mute text-xs uppercase tracking-widest mt-2">
-              Política · Medis · Actualitat
-            </p>
-          </div>
+        <div className="aspect-[4/3] bg-bg-soft rounded-2xl border border-line overflow-hidden relative">
+          <img
+            src="/images/home/main.jpg"
+            alt="Bones Notícies"
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          />
           <div className="absolute bottom-3 right-3 w-10 h-10 rounded-full bg-green flex items-center justify-center">
             <span className="font-sans text-[10px] font-bold text-ink">CAT</span>
           </div>
