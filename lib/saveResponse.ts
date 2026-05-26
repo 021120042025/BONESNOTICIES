@@ -12,16 +12,21 @@ export async function saveResponse(
 ): Promise<void> {
   const { scoreOutOf10 } = computeScore(answers);
 
-  console.log('TRYING TO INSERT');
+  const { error } = await supabase
+    .from('responses')
+    .insert({
+      score:    scoreOutOf10,
+      narrator,
+      answers,             // serialised as jsonb by Supabase
+    });
 
-const { data, error } = await supabase
-  .from('responses')
-  .insert({
-    score: scoreOutOf10,
-    narrator,
-    answers,
-  })
-  .select();
-
-console.log('SUPABASE RESPONSE:', { data, error });
+  if (error) {
+    console.error(
+      '[saveResponse] Insert failed:',
+      error.message,
+      '| code:', error.code,
+      '| details:', error.details,
+      '| hint:', error.hint,
+    );
+  }
 }
