@@ -77,10 +77,10 @@ useEffect(() => {
 
   if (step === 'results' && !savedRef.current) {
     savedRef.current = true;
+  } else if (step !== 'results') {
+    savedRef.current = false;
   }
-}, [step]);
-
-saveResponse(answers, narrator);
+}, [step, answers, narrator]);
     }
     if (step === 'landing') {
       savedRef.current = false; // allow saving again after restart
