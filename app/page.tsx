@@ -81,7 +81,7 @@ useEffect(() => {
     savedRef.current = false; // allow saving again after restart
   }
 }, [step, answers, narrator]);
-    }
+
 
   
   function handleGoNext() {
