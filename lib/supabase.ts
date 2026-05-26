@@ -28,6 +28,12 @@ export function getSupabaseClient(): SupabaseClient | null {
     return null;
   }
 
-  _client = createClient(url, key);
+  // Guard against a common misconfiguration: URL set to the REST endpoint
+  // (e.g. "https://…supabase.co/rest/v1/") instead of the project base URL.
+  // The Supabase JS client always appends /rest/v1 itself, so the path must
+  // be stripped here or every request lands on /rest/v1/rest/v1/… (404).
+  const baseUrl = url.replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '');
+
+  _client = createClient(baseUrl, key);
   return _client;
 }
