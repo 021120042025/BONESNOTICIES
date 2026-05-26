@@ -2,6 +2,15 @@
 
 import { NARRATORS } from '@/data/quizData';
 
+const NARRATOR_IMAGES: Record<string, string> = {
+  'marc-giro':       '/images/narrators/marc-giro.png',
+  'jordi-evole':     '/images/narrators/jordi-evole.png',
+  'juana-dolores':   '/images/narrators/juana-dolores.png',
+  'alba-riera':      '/images/narrators/alba-riera.png',
+  'samantha-hudson': '/images/narrators/samantha-hudson.png',
+  'roma-gallardo':   '/images/narrators/roma-gallardo.png',
+};
+
 interface Props {
   narratorId: string | null;
   text: string;
@@ -17,21 +26,30 @@ export default function NarratorBubble({ narratorId, text }: Props) {
     >
       {/* Avatar — 72×72, 14px radius, no green border, bg-soft */}
       <div
-        className="shrink-0 flex items-end justify-center overflow-hidden"
+        className="shrink-0 overflow-hidden"
         style={{
           width: '72px',
           height: '72px',
           borderRadius: '14px',
           background: '#2b231d',
-          position: 'relative',
         }}
       >
-        <span
-          className="font-display font-black text-bone"
-          style={{ fontSize: '20px', letterSpacing: '-0.02em', paddingBottom: '8px' }}
-        >
-          {narrator.initials}
-        </span>
+        {NARRATOR_IMAGES[narrator.id] ? (
+          <img
+            src={NARRATOR_IMAGES[narrator.id]}
+            alt={narrator.name}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', display: 'block' }}
+          />
+        ) : (
+          <div className="flex items-end justify-center w-full h-full">
+            <span
+              className="font-display font-black text-bone"
+              style={{ fontSize: '20px', letterSpacing: '-0.02em', paddingBottom: '8px' }}
+            >
+              {narrator.initials}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Speech bubble — 20px radius, bg-soft, faint border */}

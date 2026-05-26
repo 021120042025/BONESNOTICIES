@@ -17,8 +17,8 @@ export default function LandingScreen({ onStart }: Props) {
         className="border-b border-line pb-4 mb-6"
       >
         <div className="flex items-start justify-between gap-4">
-          <h1 className="font-display font-black text-[52px] leading-[0.9] tracking-[-0.04em] text-bone uppercase">
-            Bones<br />Notícies
+          <h1 className="font-display font-black text-[52px] leading-[0.9] tracking-[-0.04em] text-bone">
+            BonesNotices
           </h1>
           <div className="flex flex-col items-end gap-1 pt-1">
             <div className="w-5 h-5 rounded-full bg-green border-2 border-bg-soft" />
