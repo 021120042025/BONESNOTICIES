@@ -25,7 +25,7 @@ export default function LandingScreen({ onStart }: Props) {
         initial={{ opacity: 0, y: -6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.05 }}
-        className="mb-5"
+        className="mb-4"
       >
         <h1
           className="font-display font-black text-bone"
@@ -53,8 +53,8 @@ export default function LandingScreen({ onStart }: Props) {
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5, delay: 0.1 }}
-        className="flex-1 relative mb-5"
-        style={{ minHeight: '200px' }}
+        className="flex-1 relative mb-3"
+        style={{ minHeight: '140px' }}
       >
         <div
           className="w-full h-full overflow-hidden relative"
@@ -77,10 +77,12 @@ export default function LandingScreen({ onStart }: Props) {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.2 }}
-        className="font-serif mb-6 text-bone-dim"
-        style={{ fontSize: '15px', lineHeight: 1.45, fontStyle: 'italic' }}
+        className="font-serif mb-4 text-bone-dim"
+        style={{ fontSize: '13.5px', lineHeight: 1.45, fontStyle: 'italic' }}
       >
-        ¿Saps qui mana realment al Congrés? Posa&apos;t a prova.
+        La política et genera curiositat o ja fas scroll quan surt una notícia?{' '}
+        &ldquo;Bones Notícies&rdquo; és un qüestionari interactiu que posa a prova el teu nivell
+        de coneixement sobre l&apos;actualitat política i mediàtica a Catalunya i Espanya.
       </motion.p>
 
       {/* ── CTA ─────────────────────────────────────── */}
