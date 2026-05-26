@@ -24,3 +24,4 @@ const { data, error } = await supabase
   .select();
 
 console.log('SUPABASE RESPONSE:', { data, error });
+}
