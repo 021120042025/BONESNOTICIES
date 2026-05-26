@@ -116,4 +116,4 @@ body {
 .qa-8 .qa-col:nth-child(2){left:38%; height:56px; background:#00ff00; animation:qGrow 2.4s ease-in-out infinite; transform-origin:bottom;}
 .qa-8 .qa-col:nth-child(3){left:54%; height:38px;}
 .qa-8 .qa-col:nth-child(4){left:70%; height:50px;}
-.qa-8 .qa-base { position:absolute; bottom:12px; left:14px; right:14px; height:3px; border-radius:2px; backgro
+.qa-8 .qa-base { position:absolute; bottom:12px; left:14px; right:14px; height:3px; border-radius:2px; background:rgba(38,30,25,.2); }
